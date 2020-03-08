@@ -4,12 +4,20 @@ Goal: Provide functions to preprocess images for pre-processing
 Author: Matthias Quinn
 Source 1: https://www.analyticsvidhya.com/blog/2019/09/9-powerful-tricks-for-working-image-data-skimage-python/
 Source 2: https://www.geeksforgeeks.org/python-data-augmentation/
+Source 3: https://math.stackexchange.com/questions/906240/algorithms-to-increase-or-decrease-the-contrast-of-an-image/906280#906280
+Source 5: https://stackoverflow.com/questions/39308030/how-do-i-increase-the-contrast-of-an-image-in-python-opencv
+Source 6: https://towardsdatascience.com/histogram-equalization-5d1013626e64#:~:text=
+Source 7: https://stackoverflow.com/questions/25008458/how-to-apply-clahe-on-rgb-color-images
+Source 8: https://docs.opencv.org/master/d5/daf/tutorial_py_histogram_equalization.html
+
+Notes:
+    Binary Image = pixels that can have one of only two colors, usually black or white
+        Grayscale images are NOT binary: different shades of gray
 """
 ###############################################################################
 ###                     1.  Define Working Directory                        ###
 ###############################################################################
 import os
-
 abspath = os.path.abspath("C:/Users/miqui/OneDrive/Python Projects/Images")
 os.chdir(abspath)
 ###############################################################################
@@ -24,10 +32,19 @@ import cv2
 # To read an image from your machine:
 image1 = imread("SydneyOperaHouse.jfif")
 image2 = imread("Number8.jpg")
+image3 = imread("FuzzyTest.jpg")
 imshow(image1)
 plt.show()
 imshow(image2)
 plt.show()
+
+
+"Function to show images later on:"
+def show(image):
+    plt.imshow(image, aspect="auto")
+    plt.show()
+show(image1)
+show(image2)
 
 "Reading Images from our System using skimage"
 
@@ -60,7 +77,6 @@ plt.show()
 
 "Resizing Images:"
 
-
 # It is generally useful to make sure that each image is the same size
 # when they are used as inputs to our model.
 
@@ -79,7 +95,6 @@ plt.show()
 
 "Converting Images to Grayscale:"
 
-
 # This function inputs the original image and outputs to a gray color space.
 # From 3 channels to 1
 def grayImage(image, display=False):
@@ -93,6 +108,49 @@ def grayImage(image, display=False):
 gray = grayImage(image1)
 
 
+"Changing Brightness and Contrast:"
+
+# This one's a bit more in-depth than the other one's.
+# Essentially:
+    # f(x) = alpha(X) + beta
+    # alpha: controls the contrast of the image  [0, Inf]
+    # beta: controls the brightness of the image [-127, 127]
+    # alpha 1 beta 0: no change to image
+
+def contrastBright(image, alpha, beta):
+    """alpha 1 beta 0: no change to image"""
+    adjusted = cv2.convertScaleAbs(image, alpha = alpha, beta = beta)
+    return adjusted
+
+contrastBright(image1, alpha=1.5, beta=0)
+
+
+"Histogram Equalization:"
+
+# A histogram is used to represent the intensity distribution of an image
+# X = tonal scale
+# Y = number of pixels in the image
+# (X,Y) = number of pixels at that specific brightness level
+# Helps to spread out the contrast of an image
+
+# Contrast Limited Adaptive Histogram Equalization (CLAHE):
+    # Convert an image into HSV or LAB
+    # Divide an image into small tiles (8x8 is default)
+    # Histogram equalize each tile
+    # Apply bi-linear interpolation
+
+
+def clahe(image, gridSize):
+    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)  # Convert from
+    lab_planes = cv2.split(lab)  # Split into LAB components
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(gridSize, gridSize))
+    lab_planes[0] = clahe.apply(lab_planes[0])  # Apply to the first dimension only
+    lab = cv2.merge(lab_planes)
+    bgr = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)  # Convert back to BGR
+    return bgr
+
+
+texture = clahe(image3, 8)
 
 
 
@@ -103,14 +161,12 @@ gray = grayImage(image1)
 
 
 
-"Data Augmentation:"
 
-# The process of increasing the amount and diversity of the data.
-# It doesn't add outside data, but adds new data using old data
-# Techniques:
-# Rotation
-# Shearing - changes the orientation
-# Zooming
-# Cropping - select a particular area of an image
-# Flipping - horizontal or vertical
-# Changing the brightness level
+
+
+
+
+
+
+
+
