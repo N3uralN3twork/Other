@@ -9,10 +9,15 @@ Source 5: https://stackoverflow.com/questions/39308030/how-do-i-increase-the-con
 Source 6: https://towardsdatascience.com/histogram-equalization-5d1013626e64#:~:text=
 Source 7: https://stackoverflow.com/questions/25008458/how-to-apply-clahe-on-rgb-color-images
 Source 8: https://docs.opencv.org/master/d5/daf/tutorial_py_histogram_equalization.html
+Source 9: https://stackoverflow.com/questions/44650888/resize-an-image-without-distortion-opencv
 
 Notes:
     Binary Image = pixels that can have one of only two colors, usually black or white
         Grayscale images are NOT binary: different shades of gray
+    For some odd reason, when I try to read a colored image (RGB) into Python using OpenCV,
+    I get a picture that is shaded differently than the original image:
+        If my input is a red rose image, it somehow reads it as a blue rose image?
+    Interesting.
 """
 ###############################################################################
 ###                     1.  Define Working Directory                        ###
@@ -23,37 +28,31 @@ os.chdir(abspath)
 ###############################################################################
 ###                    2. Import Libraries and Models                       ###
 ###############################################################################
-from skimage.io import imread, imshow
-from skimage.color import rgb2hsv
-from skimage.transform import resize
 import matplotlib.pyplot as plt
 import cv2
 
-# To read an image from your machine:
-image1 = imread("SydneyOperaHouse.jfif")
-image2 = imread("Number8.jpg")
-image3 = imread("FuzzyTest.jpg")
-imshow(image1)
-plt.show()
-imshow(image2)
-plt.show()
-
-
 "Function to show images later on:"
+
+# CV2 has an image showing function, but it seems to break the Python console everytime I use it.
 def show(image):
     plt.imshow(image, aspect="auto")
     plt.show()
+
+"Reading Images from our System using cv2.imread()"
+
+# To read an image from your machine:
+image1 = plt.imread("Rose.jpg", )
+image2 = plt.imread("Number8.jpg")
+image3 = plt.imread("FuzzyTest.jpg")
+
+# Show example:
+
 show(image1)
-show(image2)
 
-"Reading Images from our System using skimage"
 
-# The imread function has a parameter "as_gray" which is used to specify if the image
-# is to be converted into a grayscale format.
-
-gray_image = imread("SydneyOperaHouse.jfif", as_gray=True)
-imshow(gray_image)
-plt.show()
+###############################################################################
+###                    3. Image Transformations                             ###
+###############################################################################
 
 # Notice how each image is stored as an matrix of numbers.
 # The larger the number, the more intense the pixel is.
@@ -72,8 +71,7 @@ image1.shape  # The 3 represents the 3 channels in the image, RGB
 
 # To convert an image to the HSV format:
 HSVImage = rgb2hsv(image1)
-imshow(HSVImage)
-plt.show()
+show(HSVImage)
 
 "Resizing Images:"
 
@@ -82,31 +80,55 @@ plt.show()
 
 # The image function to use is called "resize"
 # Custom function below
-def resizeImage(image, output_shape, Shape=False):
-    if Shape == True:
-        print("Height = {}, Width = {}".format(image.shape[0], image.shape[1]))
-    a = resize(image, output_shape=output_shape)
-    return a
 
+def resizeImage(image, width = None, height = None, inter = cv2.INTER_AREA):
+    # initialize the dimensions of the image to be resized and
+    # grab the image size
+    (h, w) = image.shape[:2]
 
-ResizedImage = resizeImage(image=image2, output_shape=(500, 500), Shape=True)
-imshow(ResizedImage)
-plt.show()
+    # if both the width and height are None, then return the
+    # original image
+    if width is None and height is None:
+        return image
+
+    # check to see if the width is None
+    if width is None:
+        # calculate the ratio of the height and construct the
+        # dimensions
+        r = height / float(h)
+        dim = (int(w * r), height)
+
+    # otherwise, the height is None
+    else:
+        # calculate the ratio of the width and construct the
+        # dimensions
+        r = width / float(w)
+        dim = (width, int(h * r))
+
+    # resize the image
+    resized = cv2.resize(image, dim, interpolation = inter)
+
+    # return the resized image
+    return resized
+
+ResizedImage = resizeImage(image=image2, width=100, height=100)
+show(ResizedImage)
 
 "Converting Images to Grayscale:"
 
 # This function inputs the original image and outputs to a gray color space.
 # From 3 channels to 1
 def grayImage(image, display=False):
-    gray = cv2.cvtColor(image, code=cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     if display == True:
-        imshow(gray)
+        plt.imshow(gray)
         plt.show()
     else:
         return gray
 
-gray = grayImage(image1)
 
+gray = grayImage(image1)
+show(gray)
 
 "Changing Brightness and Contrast:"
 
