@@ -151,7 +151,8 @@ def clahe(image, gridSize):
 
 
 texture = clahe(image3, 8)
-
+show(image3)
+show(texture)
 
 
 
