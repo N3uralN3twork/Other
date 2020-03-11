@@ -10,7 +10,8 @@ Source 6: https://towardsdatascience.com/histogram-equalization-5d1013626e64#:~:
 Source 7: https://stackoverflow.com/questions/25008458/how-to-apply-clahe-on-rgb-color-images
 Source 8: https://docs.opencv.org/master/d5/daf/tutorial_py_histogram_equalization.html
 Source 9: https://stackoverflow.com/questions/44650888/resize-an-image-without-distortion-opencv
-
+Source 10: https://stats.stackexchange.com/questions/211436/why-normalize-images-by-subtracting-datasets-image-mean-instead-of-the-current
+Source 11: https://www.pyimagesearch.com/2015/04/06/zero-parameter-automatic-canny-edge-detection-with-python-and-opencv/
 Notes:
     Binary Image = pixels that can have one of only two colors, usually black or white
         Grayscale images are NOT binary: different shades of gray
@@ -18,6 +19,9 @@ Notes:
     I get a picture that is shaded differently than the original image:
         If my input is a red rose image, it somehow reads it as a blue rose image?
     Interesting.
+    For deep learning:
+        Your input shape for the images should be:
+            (n, width, height, 3)
 """
 ###############################################################################
 ###                     1.  Define Working Directory                        ###
@@ -30,6 +34,7 @@ os.chdir(abspath)
 ###############################################################################
 import matplotlib.pyplot as plt
 import cv2
+import glob
 
 "Function to show images later on:"
 
@@ -44,10 +49,16 @@ def show(image):
 image1 = plt.imread("Rose.jpg", )
 image2 = plt.imread("Number8.jpg")
 image3 = plt.imread("FuzzyTest.jpg")
+sudoku = plt.imread("Sudoku.jpg")
+
+# To read in a bunch of images from a directory
+images = [cv2.imread(file) for file in glob.glob("C:/Users/miqui/OneDrive/Python Projects/Images/Validation/*.jpg")]
+
 
 # Show example:
 
 show(image1)
+show(images[0])
 
 
 ###############################################################################
@@ -82,26 +93,22 @@ show(HSVImage)
 # Custom function below
 
 def resizeImage(image, width = None, height = None, inter = cv2.INTER_AREA):
-    # initialize the dimensions of the image to be resized and
-    # grab the image size
+    # initialize the dimensions of the image to be resized and grab the image size
     (h, w) = image.shape[:2]
 
-    # if both the width and height are None, then return the
-    # original image
+    # if both the width and height are None, then return the original image
     if width is None and height is None:
         return image
 
     # check to see if the width is None
     if width is None:
-        # calculate the ratio of the height and construct the
-        # dimensions
+        # calculate the ratio of the height and construct the dimensions
         r = height / float(h)
         dim = (int(w * r), height)
 
     # otherwise, the height is None
     else:
-        # calculate the ratio of the width and construct the
-        # dimensions
+        # calculate the ratio of the width and construct the dimensions
         r = width / float(w)
         dim = (width, int(h * r))
 
@@ -119,7 +126,7 @@ show(ResizedImage)
 # This function inputs the original image and outputs to a gray color space.
 # From 3 channels to 1
 def grayImage(image, display=False):
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     if display == True:
         plt.imshow(gray)
         plt.show()
@@ -144,8 +151,8 @@ def contrastBright(image, alpha, beta):
     adjusted = cv2.convertScaleAbs(image, alpha = alpha, beta = beta)
     return adjusted
 
-contrastBright(image1, alpha=1.5, beta=0)
-
+test = contrastBright(image1, alpha=1.5, beta=0)
+show(test)
 
 "Histogram Equalization:"
 
@@ -171,20 +178,57 @@ def clahe(image, gridSize):
     bgr = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)  # Convert back to BGR
     return bgr
 
-
 texture = clahe(image3, 8)
 show(image3)
 show(texture)
 
 
+"Normalize an Image:"
+
+# Changes the range of pixel intensity values.
+# Subtracting the mean center's the pixel data
+# You can also normalize each feature value to a z-score
+# Reason, to ensure that the gradients in your model don't get out of control\
+# The mean is per image, not the average of an image batch
+# 255 keeps the image the same
+
+def normalize(image, beta, type):
+    if beta > 0:
+        out = cv2.normalize(image, dst=None, alpha=0, beta=beta, norm_type=type)
+        return out
+    else:
+        print("Please choose a beta value > 0")
 
 
+test = normalize(image1, beta = 255, type=cv2.NORM_MINMAX)
+show(test)
 
 
+"Edge Detection:"
+# Canny Edge Detector
+    # 1986 by John F. Canny
+# Reduce unnecessary information in an image
+# Extract important features of an image
+# Laplacian does not work with colored images...
+
+def edgesImage(image, method, min = 100, max = 200):
+    if method == "Canny":
+        edges = cv2.Canny(image, min, max)
+        return edges
+    elif method == "Laplacian":
+        lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        #blur = cv2.GaussianBlur(gray, (3, 3), 0)
+        laplacian = cv2.Laplacian(lab, cv2.CV_64F)
+        laplacian = laplacian / laplacian.max()
+        return laplacian
+    else:
+        return "Please choose an appropriate method."
 
 
-
-
+test = edgesImage(sudoku, method="Canny", min=100, max=200)
+test2 = edgesImage(sudoku, method="Laplacian")
+show(test)
+show(test2)
 
 
 
