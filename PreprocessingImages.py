@@ -52,13 +52,23 @@ image3 = plt.imread("FuzzyTest.jpg")
 sudoku = plt.imread("Sudoku.jpg")
 
 # To read in a bunch of images from a directory
-images = [cv2.imread(file) for file in glob.glob("C:/Users/miqui/OneDrive/Python Projects/Images/Validation/*.jpg")]
-
+path = glob.glob("Flowers/daisy/*.jpg")
+images = []
+for img in path:
+    result = cv2.imread(img)
+    images.append(result)
 
 # Show example:
 
 show(image1)
 show(images[0])
+# Show first 4 images
+for i in range(4):
+    show(images[i])
+
+# Plot first 4 images:
+for i in range(4):
+    show(images[i])
 
 
 ###############################################################################
@@ -136,6 +146,14 @@ def grayImage(image, display=False):
 
 gray = grayImage(image1)
 show(gray)
+
+test = []
+for i in images:
+    result = grayImage(i, display=False)
+    test.append(result)
+
+for i in range(4):
+    print(test[i].shape)
 
 "Changing Brightness and Contrast:"
 
